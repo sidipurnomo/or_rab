@@ -6,6 +6,7 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 import io
+import os
 
 # =====================================================================
 # 1. KONFIGURASI & KONEKSI GOOGLE API
@@ -15,16 +16,23 @@ SCOPES = [
     'https://www.googleapis.com/auth/drive'
 ]
 
-# Konfigurasi Spreadsheet & Folder Drive
 SPREADSHEET_NAME = "Rincian Tagihan OR PT RAB"
-# Folder ID diisikan hanya kode uniknya (bukan link lengkap)
 DRIVE_FOLDER_ID = "1Nag7O-ZguGM-smzk1SkMQXVIjaHQXZH2"
 CREDENTIALS_FILE = "credentials.json"
 
 @st.cache_resource
 def get_services():
-    """Inisialisasi koneksi ke Google Sheets dan Google Drive"""
-    creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+    """Inisialisasi koneksi ke Google Sheets dan Google Drive via st.secrets atau file lokal"""
+    # Cek apakah konfigurasi ada di Streamlit Secrets (untuk deploy di Streamlit Cloud)
+    if "gcp_service_account" in st.secrets:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    # Jika tidak ada, coba baca dari file credentials.json lokal
+    elif os.path.exists(CREDENTIALS_FILE):
+        creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+    else:
+        st.error("❌ Kredensial Google Service Account tidak ditemukan! Setup 'st.secrets' atau taruh file 'credentials.json' di folder proyek.")
+        st.stop()
     
     # Koneksi Google Sheets
     gc = gspread.authorize(creds)
