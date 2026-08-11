@@ -18,7 +18,7 @@ SCOPES = [
 # Konfigurasi Spreadsheet & Folder Drive
 SPREADSHEET_NAME = "Rincian Tagihan OR PT RAB"
 # Folder ID diisikan hanya kode uniknya (bukan link lengkap)
-DRIVE_FOLDER_ID = "https://docs.google.com/spreadsheets/d/1VcFKNGtMljHL0TQaZw7FoLkG7Zfdq1NEvE0qAPS-kwo/edit?usp=sharing"
+DRIVE_FOLDER_ID = "1Nag7O-ZguGM-smzk1SkMQXVIjaHQXZH2"
 CREDENTIALS_FILE = "credentials.json"
 
 @st.cache_resource
