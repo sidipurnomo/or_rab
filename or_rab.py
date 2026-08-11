@@ -16,8 +16,8 @@ SCOPES = [
 ]
 
 # Ganti dengan nama file Google Sheet dan Folder ID Google Drive Anda
-SPREADSHEET_NAME = "Template Rincian Tagihan OR"
-DRIVE_FOLDER_ID = "MASUKKAN_FOLDER_ID_GOOGLE_DRIVE_DISINI"
+SPREADSHEET_NAME = "Rincian Tagihan OR PT RAB"
+DRIVE_FOLDER_ID = "https://drive.google.com/drive/u/0/folders/1Nag7O-ZguGM-smzk1SkMQXVIjaHQXZH2"
 CREDENTIALS_FILE = "credentials.json"
 
 @st.cache_resource
