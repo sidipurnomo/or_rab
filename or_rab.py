@@ -15,9 +15,10 @@ SCOPES = [
     'https://www.googleapis.com/auth/drive'
 ]
 
-# Ganti dengan nama file Google Sheet dan Folder ID Google Drive Anda
+# Konfigurasi Spreadsheet & Folder Drive
 SPREADSHEET_NAME = "Rincian Tagihan OR PT RAB"
-DRIVE_FOLDER_ID = "https://drive.google.com/drive/u/0/folders/1Nag7O-ZguGM-smzk1SkMQXVIjaHQXZH2"
+# Folder ID diisikan hanya kode uniknya (bukan link lengkap)
+DRIVE_FOLDER_ID = "1Nag7O-ZguGM-smzk1SkMQXVIjaHQXZH2"
 CREDENTIALS_FILE = "credentials.json"
 
 @st.cache_resource
@@ -54,7 +55,7 @@ def upload_to_drive(file_buffer, file_name, mime_type):
         fields='id, webViewLink'
     ).execute()
     
-    # Beri izin agar link bisa diakses (opsional: anyone with link can view)
+    # Beri izin agar link bisa diakses
     drive_service.permissions().create(
         fileId=uploaded_file.get('id'),
         body={'type': 'anyone', 'role': 'reader'}
@@ -70,8 +71,12 @@ st.set_page_config(page_title="Rincian Tagihan OR", layout="wide")
 st.title("📋 Input & Rincian Tagihan OR")
 
 # Ambil data dari Spreadsheet
-records = sheet.get_all_records()
-df = pd.DataFrame(records)
+try:
+    records = sheet.get_all_records()
+    df = pd.DataFrame(records)
+except Exception as e:
+    st.error(f"Gagal membaca data dari Google Sheets: {e}")
+    df = pd.DataFrame()
 
 # Perhitungan KPI (Total Diajukan, Approved, Not Approved)
 total_diajukan = 0
@@ -84,7 +89,7 @@ if not df.empty and "Total" in df.columns and "Approve by RAB" in df.columns:
     total_approved = df[df["Approve by RAB"] == "Approved"]["Total_Num"].sum()
     total_not_approved = df[df["Approve by RAB"] == "Not Approved"]["Total_Num"].sum()
 
-# Tampilkan ringkasan tagihan (mirip tabel atas pada gambar)
+# Tampilkan ringkasan tagihan
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric("Total Diajukan", f"Rp {total_diajukan:,.0f}".replace(",", "."))
@@ -145,7 +150,7 @@ with st.form("form_tagihan", clear_on_submit=True):
                     st.success("✅ Data berhasil disimpan ke Spreadsheet & Google Drive!")
                     st.rerun()  # Refresh halaman agar tabel terupdate
                 except Exception as e:
-                    st.error(f"Terjadi kesalahan: {e}")
+                    st.error(f"Terjadi kesalahan saat menyimpan data: {e}")
 
 st.divider()
 
@@ -157,7 +162,15 @@ st.subheader("📊 Daftar Rincian Tagihan OR")
 if not df.empty:
     # Ubah format angka rupiah agar nyaman dibaca
     if "Total" in df.columns:
-        df["Total"] = df["Total"].apply(lambda x: f"Rp {int(x):,.0f}".replace(",", ".") if pd.notnull(x) and str(x).strip() != "" else "Rp 0")
+        df["Total_Display"] = df["Total"].apply(
+            lambda x: f"Rp {int(x):,.0f}".replace(",", ".") if pd.notnull(x) and str(x).strip() != "" else "Rp 0"
+        )
+        df["Total"] = df["Total_Display"]
+        df.drop(columns=["Total_Display"], inplace=True)
+    
+    # Hapus kolom bantuan numerik jika ada sebelum ditampilkan ke tabel
+    if "Total_Num" in df.columns:
+        df.drop(columns=["Total_Num"], inplace=True)
     
     # Tampilkan tabel menggunakan dataframe
     st.dataframe(
